@@ -1,32 +1,32 @@
 package com.example.demo.modelo;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "usuario")
+@Table(name = "\"Usuario\"")
 public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    @Column(name = "id_usuario")
+    private Long id;
 
     @Column(unique = true, nullable = false)
     private String email;
 
+    @Column(nullable = false, length = 100)
     private String nombre;
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    // Valores iguales a los de la BD ('vecino' / 'municipio'). Default igual al de la BD.
     @Enumerated(EnumType.STRING)
-    private Rol rol;
+    @Column(nullable = false, length = 20)
+    private Rol rol = Rol.vecino;
 
-    @Column(name = "reset_token")
-    private String resetToken;
-
-    @Column(name = "reset_token_expiry")
-    private LocalDateTime resetTokenExpiry;
+    @Column(length = 30)
+    private String telefono;
 
     public Usuario() {
     }
@@ -38,11 +38,11 @@ public class Usuario {
         this.rol = rol;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -78,19 +78,11 @@ public class Usuario {
         this.rol = rol;
     }
 
-    public String getResetToken() {
-        return resetToken;
+    public String getTelefono() {
+        return telefono;
     }
 
-    public void setResetToken(String resetToken) {
-        this.resetToken = resetToken;
-    }
-
-    public LocalDateTime getResetTokenExpiry() {
-        return resetTokenExpiry;
-    }
-
-    public void setResetTokenExpiry(LocalDateTime resetTokenExpiry) {
-        this.resetTokenExpiry = resetTokenExpiry;
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
     }
 }
