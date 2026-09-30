@@ -8,10 +8,16 @@ public record UsuarioResponse(
         Long id,
         String email,
         String nombre,
+        String apellido,
+        String documento,
+        String direccion,
         Rol rol,
         String telefono
 ) {
     public static UsuarioResponse de(Usuario u) {
-        return new UsuarioResponse(u.getId(), u.getEmail(), u.getNombre(), u.getRol(), u.getTelefono());
+        return new UsuarioResponse(
+                u.getId(), u.getEmail(), u.getNombre(), u.getApellido(),
+                u.getDocumento(), u.getDireccion(), u.getRol(), u.getTelefono()
+        );
     }
 }

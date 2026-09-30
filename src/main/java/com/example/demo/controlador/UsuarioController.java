@@ -49,6 +49,9 @@ public class UsuarioController {
             usuario.setRol(request.rol());
         }
         usuario.setTelefono(request.telefono());
+        usuario.setApellido(request.apellido());
+        usuario.setDocumento(request.documento());
+        usuario.setDireccion(request.direccion());
 
         Usuario guardado = usuarioRepository.save(usuario);
         return ResponseEntity.status(HttpStatus.CREATED).body(UsuarioResponse.de(guardado));

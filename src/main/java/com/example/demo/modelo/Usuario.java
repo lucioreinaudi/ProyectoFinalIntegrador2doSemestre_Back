@@ -17,6 +17,15 @@ public class Usuario {
     @Column(nullable = false, length = 100)
     private String nombre;
 
+    @Column(length = 100)
+    private String apellido;
+
+    @Column(length = 20)
+    private String documento;
+
+    @Column(columnDefinition = "text")
+    private String direccion;
+
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
@@ -60,6 +69,30 @@ public class Usuario {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+
+    public String getApellido() {
+        return apellido;
+    }
+
+    public void setApellido(String apellido) {
+        this.apellido = apellido;
+    }
+
+    public String getDocumento() {
+        return documento;
+    }
+
+    public void setDocumento(String documento) {
+        this.documento = documento;
+    }
+
+    public String getDireccion() {
+        return direccion;
+    }
+
+    public void setDireccion(String direccion) {
+        this.direccion = direccion;
     }
 
     public String getPasswordHash() {
