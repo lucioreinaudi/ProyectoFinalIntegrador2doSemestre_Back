@@ -3,7 +3,9 @@ package com.example.demo.controlador;
 import com.example.demo.dto.UsuarioCrearRequest;
 import com.example.demo.dto.UsuarioResponse;
 import com.example.demo.modelo.Usuario;
+import com.example.demo.modelo.Zona;
 import com.example.demo.repositorio.UsuarioRepository;
+import com.example.demo.repositorio.ZonaRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,9 +18,11 @@ import java.util.List;
 public class UsuarioController {
 
     private final UsuarioRepository usuarioRepository;
+    private final ZonaRepository zonaRepository;
 
-    public UsuarioController(UsuarioRepository usuarioRepository) {
+    public UsuarioController(UsuarioRepository usuarioRepository, ZonaRepository zonaRepository) {
         this.usuarioRepository = usuarioRepository;
+        this.zonaRepository = zonaRepository;
     }
 
     @GetMapping
@@ -52,6 +56,12 @@ public class UsuarioController {
         usuario.setApellido(request.apellido());
         usuario.setDocumento(request.documento());
         usuario.setDireccion(request.direccion());
+
+        if (request.zonaId() != null) {
+            Zona zona = zonaRepository.findById(request.zonaId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "No existe la zona indicada"));
+            usuario.setZona(zona);
+        }
 
         Usuario guardado = usuarioRepository.save(usuario);
         return ResponseEntity.status(HttpStatus.CREATED).body(UsuarioResponse.de(guardado));

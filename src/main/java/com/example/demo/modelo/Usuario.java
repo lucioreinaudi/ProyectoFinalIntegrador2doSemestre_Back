@@ -37,6 +37,10 @@ public class Usuario {
     @Column(length = 30)
     private String telefono;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "zona_id")
+    private Zona zona;
+
     public Usuario() {
     }
 
@@ -117,5 +121,13 @@ public class Usuario {
 
     public void setTelefono(String telefono) {
         this.telefono = telefono;
+    }
+
+    public Zona getZona() {
+        return zona;
+    }
+
+    public void setZona(Zona zona) {
+        this.zona = zona;
     }
 }
