@@ -56,6 +56,7 @@ public class UsuarioController {
         usuario.setApellido(request.apellido());
         usuario.setDocumento(request.documento());
         usuario.setDireccion(request.direccion());
+        usuario.setFechaNacimiento(request.fechaNacimiento());
 
         if (request.zonaId() != null) {
             Zona zona = zonaRepository.findById(request.zonaId())

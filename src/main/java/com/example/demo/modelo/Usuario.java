@@ -2,6 +2,8 @@ package com.example.demo.modelo;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "\"Usuario\"")
 public class Usuario {
@@ -25,6 +27,9 @@ public class Usuario {
 
     @Column(columnDefinition = "text")
     private String direccion;
+
+    @Column(name = "fecha_nacimiento")
+    private LocalDate fechaNacimiento;
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
@@ -97,6 +102,14 @@ public class Usuario {
 
     public void setDireccion(String direccion) {
         this.direccion = direccion;
+    }
+
+    public LocalDate getFechaNacimiento() {
+        return fechaNacimiento;
+    }
+
+    public void setFechaNacimiento(LocalDate fechaNacimiento) {
+        this.fechaNacimiento = fechaNacimiento;
     }
 
     public String getPasswordHash() {

@@ -3,6 +3,8 @@ package com.example.demo.dto;
 import com.example.demo.modelo.Rol;
 import com.example.demo.modelo.Usuario;
 
+import java.time.LocalDate;
+
 // Lo que devuelve la API. A proposito no incluye passwordHash.
 public record UsuarioResponse(
         Long id,
@@ -11,6 +13,7 @@ public record UsuarioResponse(
         String apellido,
         String documento,
         String direccion,
+        LocalDate fechaNacimiento,
         Rol rol,
         String telefono,
         Long zonaId,
@@ -21,8 +24,8 @@ public record UsuarioResponse(
         String zonaNombre = u.getZona() != null ? u.getZona().getNombre() : null;
         return new UsuarioResponse(
                 u.getId(), u.getEmail(), u.getNombre(), u.getApellido(),
-                u.getDocumento(), u.getDireccion(), u.getRol(), u.getTelefono(),
-                zonaId, zonaNombre
+                u.getDocumento(), u.getDireccion(), u.getFechaNacimiento(),
+                u.getRol(), u.getTelefono(), zonaId, zonaNombre
         );
     }
 }
