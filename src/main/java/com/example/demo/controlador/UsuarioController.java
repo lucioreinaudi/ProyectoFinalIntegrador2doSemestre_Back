@@ -8,6 +8,7 @@ import com.example.demo.repositorio.UsuarioRepository;
 import com.example.demo.repositorio.ZonaRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -19,10 +20,12 @@ public class UsuarioController {
 
     private final UsuarioRepository usuarioRepository;
     private final ZonaRepository zonaRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UsuarioController(UsuarioRepository usuarioRepository, ZonaRepository zonaRepository) {
+    public UsuarioController(UsuarioRepository usuarioRepository, ZonaRepository zonaRepository, PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.zonaRepository = zonaRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping
@@ -47,8 +50,7 @@ public class UsuarioController {
         Usuario usuario = new Usuario();
         usuario.setEmail(request.email());
         usuario.setNombre(request.nombre());
-        // TODO: hashear con BCrypt cuando se agregue spring-boot-starter-security.
-        usuario.setPasswordHash(request.password());
+        usuario.setPasswordHash(passwordEncoder.encode(request.password()));
         if (request.rol() != null) {
             usuario.setRol(request.rol());
         }
