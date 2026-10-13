@@ -1,5 +1,7 @@
 package com.example.demo;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,8 +11,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
-// Genera el token de sesion. Todavia nada lo exige (ver AuthController):
-// eso es la proxima card (validar el JWT en los endpoints protegidos).
+// Genera y valida el token de sesion.
 @Component
 public class JwtService {
 
@@ -32,5 +33,21 @@ public class JwtService {
                 .expiration(expira)
                 .signWith(clavePrivada)
                 .compact();
+    }
+
+    // Devuelve el email (subject) si el token es valido y no expiro; null en cualquier otro caso
+    // (firma invalida, token vencido, formato invalido, etc.). No tira excepcion a proposito:
+    // quien llama (el filtro) solo necesita saber si hay o no un usuario autenticado.
+    public String validarYObtenerEmail(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(clavePrivada)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+            return claims.getSubject();
+        } catch (JwtException | IllegalArgumentException e) {
+            return null;
+        }
     }
 }
