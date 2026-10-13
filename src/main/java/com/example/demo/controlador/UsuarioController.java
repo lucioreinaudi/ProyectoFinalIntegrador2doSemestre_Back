@@ -6,6 +6,7 @@ import com.example.demo.modelo.Usuario;
 import com.example.demo.modelo.Zona;
 import com.example.demo.repositorio.UsuarioRepository;
 import com.example.demo.repositorio.ZonaRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,12 +38,10 @@ public class UsuarioController {
     }
 
     @PostMapping
-    public ResponseEntity<UsuarioResponse> crear(@RequestBody UsuarioCrearRequest request) {
-        if (request.email() == null || request.email().isBlank()
-                || request.nombre() == null || request.nombre().isBlank()
-                || request.password() == null || request.password().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "email, nombre y password son obligatorios");
-        }
+    public ResponseEntity<UsuarioResponse> crear(@Valid @RequestBody UsuarioCrearRequest request) {
+        // La validacion de formato (campos obligatorios, email valido, largo de password)
+        // la hace @Valid sobre UsuarioCrearRequest. Lo que queda aca es lo que un DTO
+        // no puede validar solo: que el email no este repetido, y que la zona exista.
         if (usuarioRepository.findByEmail(request.email()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe un usuario con ese email");
         }

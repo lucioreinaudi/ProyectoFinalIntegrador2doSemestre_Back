@@ -79,6 +79,12 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Validacion de formato en los DTOs (@Valid, @NotBlank, @Email, etc.) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
 
 
     </dependencies>
