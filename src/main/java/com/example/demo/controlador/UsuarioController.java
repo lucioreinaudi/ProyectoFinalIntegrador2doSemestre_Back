@@ -1,5 +1,6 @@
 package com.example.demo.controlador;
 
+import com.example.demo.dto.CambiarPasswordRequest;
 import com.example.demo.dto.UsuarioActualizarRequest;
 import com.example.demo.dto.UsuarioCrearRequest;
 import com.example.demo.dto.UsuarioResponse;
@@ -74,7 +75,7 @@ public class UsuarioController {
     // Edita el PROPIO perfil. El usuario sale del token (como en Reclamo/Alerta),
     // nunca de un id en la URL: nadie puede editar a otro. A proposito no se puede
     // cambiar email ni rol desde aca (UsuarioActualizarRequest no los tiene), y la
-    // contraseña tiene su propio endpoint (PUT /api/usuarios/me/password).
+    // contraseÃ±a tiene su propio endpoint (PUT /api/usuarios/me/password).
     @PutMapping("/me")
     public UsuarioResponse actualizarPerfil(@Valid @RequestBody UsuarioActualizarRequest request, Authentication authentication) {
         Usuario usuario = usuarioRepository.findByEmail(authentication.getName())
@@ -96,5 +97,22 @@ public class UsuarioController {
         }
 
         return UsuarioResponse.de(usuarioRepository.save(usuario));
+    }
+
+    // Cambia la propia contraseña. Exige la actual (verificada con BCrypt) antes
+    // de aceptar la nueva, para que alguien que te robe la sesion (o el token)
+    // no pueda cambiarte la contraseña sin saber la de antes.
+    @PutMapping("/me/password")
+    public ResponseEntity<Void> cambiarPassword(@Valid @RequestBody CambiarPasswordRequest request, Authentication authentication) {
+        Usuario usuario = usuarioRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado"));
+
+        if (!passwordEncoder.matches(request.passwordActual(), usuario.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La contraseña actual es incorrecta");
+        }
+
+        usuario.setPasswordHash(passwordEncoder.encode(request.passwordNueva()));
+        usuarioRepository.save(usuario);
+        return ResponseEntity.noContent().build();
     }
 }
