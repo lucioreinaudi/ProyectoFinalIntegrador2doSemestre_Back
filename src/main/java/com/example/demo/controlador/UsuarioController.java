@@ -1,5 +1,6 @@
 package com.example.demo.controlador;
 
+import com.example.demo.dto.UsuarioActualizarRequest;
 import com.example.demo.dto.UsuarioCrearRequest;
 import com.example.demo.dto.UsuarioResponse;
 import com.example.demo.modelo.Usuario;
@@ -9,6 +10,7 @@ import com.example.demo.repositorio.ZonaRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -67,5 +69,32 @@ public class UsuarioController {
 
         Usuario guardado = usuarioRepository.save(usuario);
         return ResponseEntity.status(HttpStatus.CREATED).body(UsuarioResponse.de(guardado));
+    }
+
+    // Edita el PROPIO perfil. El usuario sale del token (como en Reclamo/Alerta),
+    // nunca de un id en la URL: nadie puede editar a otro. A proposito no se puede
+    // cambiar email ni rol desde aca (UsuarioActualizarRequest no los tiene), y la
+    // contraseña tiene su propio endpoint (PUT /api/usuarios/me/password).
+    @PutMapping("/me")
+    public UsuarioResponse actualizarPerfil(@Valid @RequestBody UsuarioActualizarRequest request, Authentication authentication) {
+        Usuario usuario = usuarioRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado"));
+
+        usuario.setNombre(request.nombre());
+        usuario.setApellido(request.apellido());
+        usuario.setDocumento(request.documento());
+        usuario.setDireccion(request.direccion());
+        usuario.setFechaNacimiento(request.fechaNacimiento());
+        usuario.setTelefono(request.telefono());
+
+        if (request.zonaId() != null) {
+            Zona zona = zonaRepository.findById(request.zonaId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "No existe la zona indicada"));
+            usuario.setZona(zona);
+        } else {
+            usuario.setZona(null);
+        }
+
+        return UsuarioResponse.de(usuarioRepository.save(usuario));
     }
 }
