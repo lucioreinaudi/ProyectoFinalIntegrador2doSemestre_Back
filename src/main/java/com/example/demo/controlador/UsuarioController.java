@@ -53,9 +53,8 @@ public class UsuarioController {
         usuario.setEmail(request.email());
         usuario.setNombre(request.nombre());
         usuario.setPasswordHash(passwordEncoder.encode(request.password()));
-        if (request.rol() != null) {
-            usuario.setRol(request.rol());
-        }
+        // No se setea rol: queda el default de la entidad (vecino). Este endpoint
+        // es publico, asi que nunca puede crear un usuario municipio.
         usuario.setTelefono(request.telefono());
         usuario.setApellido(request.apellido());
         usuario.setDocumento(request.documento());
