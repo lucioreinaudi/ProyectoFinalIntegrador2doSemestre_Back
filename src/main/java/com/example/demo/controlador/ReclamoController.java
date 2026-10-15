@@ -56,6 +56,15 @@ public class ReclamoController {
         return reclamoRepository.findByUsuarioId(usuarioId).stream().map(ReclamoResponse::de).toList();
     }
 
+    // Los reclamos del propio vecino, sacando el usuario del token (no de un id en la
+    // URL): asi nadie puede ver reclamos ajenos cambiando un numero en el pedido.
+    @GetMapping("/me")
+    public List<ReclamoResponse> misReclamos(Authentication authentication) {
+        Usuario usuario = usuarioRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado"));
+        return reclamoRepository.findByUsuarioId(usuario.getId()).stream().map(ReclamoResponse::de).toList();
+    }
+
     @GetMapping("/zona/{zonaId}")
     public List<ReclamoResponse> porZona(@PathVariable Long zonaId) {
         return reclamoRepository.findByZonaId(zonaId).stream().map(ReclamoResponse::de).toList();
