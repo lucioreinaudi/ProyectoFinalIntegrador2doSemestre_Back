@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import com.example.demo.modelo.Rol;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -24,28 +25,32 @@ public class JwtService {
         this.expiracionMs = expiracionMs;
     }
 
-    public String generarToken(String email) {
+    // El rol va como claim del token, para que el filtro pueda armar las authorities
+    // sin ir a buscar al usuario a la base en cada pedido. Esto es seguro en este
+    // proyecto porque el rol de un usuario nunca cambia una vez creado (el unico
+    // usuario municipio se crea por SQL, no hay reasignacion de roles).
+    public String generarToken(String email, Rol rol) {
         Date ahora = new Date();
         Date expira = new Date(ahora.getTime() + expiracionMs);
         return Jwts.builder()
                 .subject(email)
+                .claim("rol", rol.name())
                 .issuedAt(ahora)
                 .expiration(expira)
                 .signWith(clavePrivada)
                 .compact();
     }
 
-    // Devuelve el email (subject) si el token es valido y no expiro; null en cualquier otro caso
+    // Devuelve los claims si el token es valido y no expiro; null en cualquier otro caso
     // (firma invalida, token vencido, formato invalido, etc.). No tira excepcion a proposito:
     // quien llama (el filtro) solo necesita saber si hay o no un usuario autenticado.
-    public String validarYObtenerEmail(String token) {
+    public Claims validarClaims(String token) {
         try {
-            Claims claims = Jwts.parser()
+            return Jwts.parser()
                     .verifyWith(clavePrivada)
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
-            return claims.getSubject();
         } catch (JwtException | IllegalArgumentException e) {
             return null;
         }

@@ -17,8 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Optional;
 
 // Login: confirma que el email y password son correctos, devuelve los datos del usuario
-// y un token JWT. OJO: por ahora el token se EMITE pero ningun endpoint lo exige todavia
-// (esa es la proxima card: validar el JWT en los endpoints protegidos).
+// y un token JWT (con el rol como claim, para que el filtro arme las authorities).
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -49,7 +48,7 @@ public class AuthController {
         }
 
         Usuario encontrado = usuario.get();
-        String token = jwtService.generarToken(encontrado.getEmail());
+        String token = jwtService.generarToken(encontrado.getEmail(), encontrado.getRol());
         return new LoginResponse(UsuarioResponse.de(encontrado), token);
     }
 }
