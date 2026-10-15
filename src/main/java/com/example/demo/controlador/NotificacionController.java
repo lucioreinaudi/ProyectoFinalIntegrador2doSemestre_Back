@@ -11,6 +11,7 @@ import com.example.demo.repositorio.UsuarioRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -49,6 +50,28 @@ public class NotificacionController {
         return Map.of("cantidad", notificacionRepository.countByUsuarioIdAndLeidaFalse(usuarioId));
     }
 
+    // Las propias notificaciones, sacando el usuario del token (no de un id en la
+    // URL): asi nadie puede leer notificaciones ajenas cambiando un numero.
+    @GetMapping("/me")
+    public List<NotificacionResponse> misNotificaciones(Authentication authentication) {
+        Usuario usuario = usuarioDelToken(authentication);
+        return notificacionRepository.findByUsuarioIdOrderByFechaDesc(usuario.getId())
+                .stream().map(NotificacionResponse::de).toList();
+    }
+
+    @GetMapping("/me/no-leidas")
+    public List<NotificacionResponse> misNoLeidas(Authentication authentication) {
+        Usuario usuario = usuarioDelToken(authentication);
+        return notificacionRepository.findByUsuarioIdAndLeidaFalse(usuario.getId())
+                .stream().map(NotificacionResponse::de).toList();
+    }
+
+    @GetMapping("/me/no-leidas/contador")
+    public Map<String, Long> miContadorNoLeidas(Authentication authentication) {
+        Usuario usuario = usuarioDelToken(authentication);
+        return Map.of("cantidad", notificacionRepository.countByUsuarioIdAndLeidaFalse(usuario.getId()));
+    }
+
     @PostMapping
     public ResponseEntity<NotificacionResponse> crear(@Valid @RequestBody NotificacionCrearRequest request) {
         Usuario usuario = usuarioRepository.findById(request.usuarioId())
@@ -61,11 +84,24 @@ public class NotificacionController {
         return ResponseEntity.status(HttpStatus.CREATED).body(NotificacionResponse.de(guardada));
     }
 
+    // Antes no validaba de quien era la notificacion: cualquiera logueado podia
+    // marcar como leida la notificacion de otro usuario con solo saber su id.
     @PatchMapping("/{id}/leida")
-    public NotificacionResponse marcarLeida(@PathVariable Long id) {
+    public NotificacionResponse marcarLeida(@PathVariable Long id, Authentication authentication) {
+        Usuario usuario = usuarioDelToken(authentication);
         Notificacion notificacion = notificacionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe esa notificacion"));
+
+        if (!notificacion.getUsuario().getId().equals(usuario.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Esa notificacion no es tuya");
+        }
+
         notificacion.setLeida(true);
         return NotificacionResponse.de(notificacionRepository.save(notificacion));
+    }
+
+    private Usuario usuarioDelToken(Authentication authentication) {
+        return usuarioRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado"));
     }
 }
