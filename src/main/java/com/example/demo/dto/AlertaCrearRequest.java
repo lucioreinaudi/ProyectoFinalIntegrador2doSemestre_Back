@@ -15,6 +15,12 @@ public record AlertaCrearRequest(
 
         String recomendaciones,
 
+        // Opcional: si no viene, la alerta queda con tipo 'otro'.
+        String tipo,
+
+        // Opcional.
+        String imagenUrl,
+
         @NotNull(message = "La zona es obligatoria")
         Long zonaId
 ) {

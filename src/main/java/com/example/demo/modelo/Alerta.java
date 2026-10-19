@@ -35,6 +35,13 @@ public class Alerta {
     @Column(nullable = false, length = 20)
     private String estado = "activa";
 
+    // Valores que acepta el CHECK de la BD: tormenta, viento, electricidad, arbol, otro. Default igual al de la BD.
+    @Column(nullable = false, length = 30)
+    private String tipo = "otro";
+
+    @Column(name = "imagen_url", columnDefinition = "text")
+    private String imagenUrl;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "zona_id", nullable = false)
     private Zona zona;
@@ -96,6 +103,22 @@ public class Alerta {
 
     public void setEstado(String estado) {
         this.estado = estado;
+    }
+
+    public String getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(String tipo) {
+        this.tipo = tipo;
+    }
+
+    public String getImagenUrl() {
+        return imagenUrl;
+    }
+
+    public void setImagenUrl(String imagenUrl) {
+        this.imagenUrl = imagenUrl;
     }
 
     public Zona getZona() {

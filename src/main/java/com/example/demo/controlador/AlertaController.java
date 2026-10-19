@@ -26,6 +26,9 @@ public class AlertaController {
     // Mismos valores que el CHECK de la tabla Alerta en la BD.
     private static final Set<String> ESTADOS_VALIDOS = Set.of("activa", "finalizada");
 
+    // Mismos valores que el CHECK de tipo en la tabla Alerta.
+    private static final Set<String> TIPOS_VALIDOS = Set.of("tormenta", "viento", "electricidad", "arbol", "otro");
+
     private final AlertaRepository alertaRepository;
     private final ZonaRepository zonaRepository;
     private final UsuarioRepository usuarioRepository;
@@ -64,7 +67,14 @@ public class AlertaController {
         Zona zona = zonaRepository.findById(request.zonaId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "No existe la zona indicada"));
 
+        String tipo = (request.tipo() == null || request.tipo().isBlank()) ? "otro" : request.tipo();
+        if (!TIPOS_VALIDOS.contains(tipo)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo invalido. Valores permitidos: " + TIPOS_VALIDOS);
+        }
+
         Alerta alerta = new Alerta();
+        alerta.setTipo(tipo);
+        alerta.setImagenUrl(request.imagenUrl());
         alerta.setTitulo(request.titulo());
         alerta.setDescripcion(request.descripcion());
         alerta.setNivelGravedad(request.nivelGravedad());
