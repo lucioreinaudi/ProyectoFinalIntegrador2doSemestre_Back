@@ -43,6 +43,9 @@ public class ReclamoEstadoService {
 
     private static final Set<String> FINALES = Set.of(RESUELTO, RECHAZADO);
 
+    // Todos los estados validos (lo usa tambien el filtro por estado del panel).
+    public static final Set<String> ESTADOS = TRANSICIONES.keySet();
+
     // Como se muestra cada estado en el mensaje de la notificacion (en la BD
     // van en minuscula y sin tilde).
     private static final Map<String, String> NOMBRE_VISIBLE = Map.of(
@@ -71,7 +74,7 @@ public class ReclamoEstadoService {
 
         if (!TRANSICIONES.containsKey(estadoNuevo)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Estado invalido. Valores permitidos: " + TRANSICIONES.keySet());
+                    "Estado invalido. Valores permitidos: " + ESTADOS);
         }
 
         // Un comentario con solo espacios cuenta como "sin comentario".

@@ -2,6 +2,7 @@ package com.example.demo.controlador;
 
 import com.example.demo.dto.ReclamoCrearRequest;
 import com.example.demo.dto.ReclamoResponse;
+import com.example.demo.dto.ReclamoResumenResponse;
 import com.example.demo.modelo.Categoria;
 import com.example.demo.modelo.EstadoReclamo;
 import com.example.demo.modelo.Reclamo;
@@ -13,6 +14,7 @@ import com.example.demo.repositorio.EstadoReclamoRepository;
 import com.example.demo.repositorio.ReclamoRepository;
 import com.example.demo.repositorio.UsuarioRepository;
 import com.example.demo.repositorio.ZonaRepository;
+import com.example.demo.service.ReclamoConsultaService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,15 +33,18 @@ public class ReclamoController {
     private final CategoriaRepository categoriaRepository;
     private final UsuarioRepository usuarioRepository;
     private final EstadoReclamoRepository estadoReclamoRepository;
+    private final ReclamoConsultaService reclamoConsultaService;
 
     public ReclamoController(ReclamoRepository reclamoRepository, ZonaRepository zonaRepository,
                               CategoriaRepository categoriaRepository, UsuarioRepository usuarioRepository,
-                              EstadoReclamoRepository estadoReclamoRepository) {
+                              EstadoReclamoRepository estadoReclamoRepository,
+                              ReclamoConsultaService reclamoConsultaService) {
         this.reclamoRepository = reclamoRepository;
         this.zonaRepository = zonaRepository;
         this.categoriaRepository = categoriaRepository;
         this.usuarioRepository = usuarioRepository;
         this.estadoReclamoRepository = estadoReclamoRepository;
+        this.reclamoConsultaService = reclamoConsultaService;
     }
 
     @GetMapping
@@ -59,11 +64,13 @@ public class ReclamoController {
 
     // Los reclamos del propio vecino, sacando el usuario del token (no de un id en la
     // URL): asi nadie puede ver reclamos ajenos cambiando un numero en el pedido.
+    // Incluye estado actual y "publicado", asi Mis Reportes no tiene que pedir el
+    // estado de cada reclamo por separado. Del mas nuevo al mas viejo.
     @GetMapping("/me")
-    public List<ReclamoResponse> misReclamos(Authentication authentication) {
+    public List<ReclamoResumenResponse> misReclamos(Authentication authentication) {
         Usuario usuario = usuarioRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado"));
-        return reclamoRepository.findByUsuarioId(usuario.getId()).stream().map(ReclamoResponse::de).toList();
+        return reclamoConsultaService.listarDelVecino(usuario.getId());
     }
 
     @GetMapping("/zona/{zonaId}")
