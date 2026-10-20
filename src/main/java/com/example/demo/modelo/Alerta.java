@@ -20,7 +20,7 @@ public class Alerta {
     @Column(columnDefinition = "text")
     private String descripcion;
 
-    // La BD no restringe los valores de nivel_gravedad (varchar(20) obligatorio).
+    // Valores que acepta el CHECK de la BD: 'alto', 'medio', 'bajo' (script SCRUM-82).
     @Column(name = "nivel_gravedad", nullable = false, length = 20)
     private String nivelGravedad;
 

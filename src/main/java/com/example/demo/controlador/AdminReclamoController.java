@@ -1,19 +1,29 @@
 package com.example.demo.controlador;
 
+import com.example.demo.dto.AlertaResponse;
 import com.example.demo.dto.PaginaResponse;
+import com.example.demo.dto.PublicarReclamoRequest;
 import com.example.demo.dto.ReclamoDetalleResponse;
 import com.example.demo.dto.ReclamoReclasificarRequest;
 import com.example.demo.dto.ReclamoResponse;
 import com.example.demo.dto.ReclamoResumenResponse;
+import com.example.demo.modelo.Alerta;
 import com.example.demo.modelo.Categoria;
 import com.example.demo.modelo.Reclamo;
+import com.example.demo.modelo.Usuario;
 import com.example.demo.modelo.Zona;
 import com.example.demo.repositorio.CategoriaRepository;
 import com.example.demo.repositorio.ReclamoRepository;
+import com.example.demo.repositorio.UsuarioRepository;
 import com.example.demo.repositorio.ZonaRepository;
+import com.example.demo.service.AlertaService;
+import com.example.demo.service.PublicacionService;
 import com.example.demo.service.ReclamoConsultaService;
+import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -30,13 +40,32 @@ public class AdminReclamoController {
     private final ZonaRepository zonaRepository;
     private final CategoriaRepository categoriaRepository;
     private final ReclamoConsultaService reclamoConsultaService;
+    private final PublicacionService publicacionService;
+    private final AlertaService alertaService;
+    private final UsuarioRepository usuarioRepository;
 
     public AdminReclamoController(ReclamoRepository reclamoRepository, ZonaRepository zonaRepository,
-                                  CategoriaRepository categoriaRepository, ReclamoConsultaService reclamoConsultaService) {
+                                  CategoriaRepository categoriaRepository, ReclamoConsultaService reclamoConsultaService,
+                                  PublicacionService publicacionService, AlertaService alertaService,
+                                  UsuarioRepository usuarioRepository) {
         this.reclamoRepository = reclamoRepository;
         this.zonaRepository = zonaRepository;
         this.categoriaRepository = categoriaRepository;
         this.reclamoConsultaService = reclamoConsultaService;
+        this.publicacionService = publicacionService;
+        this.alertaService = alertaService;
+        this.usuarioRepository = usuarioRepository;
+    }
+
+    // Publicar un reclamo: crea una alerta nueva o lo vincula a una activa, y le
+    // avisa al vecino. Devuelve la alerta resultante. Reglas en PublicacionService.
+    @PostMapping("/{id}/publicar")
+    public ResponseEntity<AlertaResponse> publicar(@PathVariable Long id, @Valid @RequestBody PublicarReclamoRequest request,
+                                                   Authentication authentication) {
+        Usuario autor = usuarioRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado"));
+        Alerta alerta = publicacionService.publicar(id, request, autor);
+        return ResponseEntity.status(HttpStatus.CREATED).body(alertaService.responder(alerta));
     }
 
     // Listado de la pestana Reclamos: estado actual, publicado, filtros opcionales

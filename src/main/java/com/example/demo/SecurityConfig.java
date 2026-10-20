@@ -75,6 +75,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/usuarios").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/clima/**").permitAll()
 
+                        // Las alertas se ven sin login (Home y detalle publico): las activas
+                        // y el detalle de una por id. El resto de /api/alertas sigue con token.
+                        .requestMatchers(HttpMethod.GET, "/api/alertas/estado/activa").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/alertas/*").permitAll()
+
                         // "Lo mio" del vecino: va antes que las reglas de abajo, para que no lo tapen.
                         .requestMatchers(HttpMethod.GET, "/api/reclamos/me").authenticated()
 
@@ -93,6 +98,8 @@ public class SecurityConfig {
                         // Crear/cambiar alertas, vinculos, estados de reclamo, zonas y categorias: solo municipio.
                         .requestMatchers(HttpMethod.POST, "/api/alertas").hasRole("MUNICIPIO")
                         .requestMatchers(HttpMethod.PATCH, "/api/alertas/*/estado").hasRole("MUNICIPIO")
+                        .requestMatchers(HttpMethod.PUT, "/api/alertas/*").hasRole("MUNICIPIO")
+                        .requestMatchers(HttpMethod.DELETE, "/api/alertas/*").hasRole("MUNICIPIO")
                         .requestMatchers(HttpMethod.POST, "/api/alertas-reclamos").hasRole("MUNICIPIO")
                         .requestMatchers(HttpMethod.DELETE, "/api/alertas-reclamos/**").hasRole("MUNICIPIO")
                         .requestMatchers(HttpMethod.POST, "/api/estados-reclamo").hasRole("MUNICIPIO")
