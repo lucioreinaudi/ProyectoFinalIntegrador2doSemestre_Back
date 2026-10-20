@@ -4,6 +4,7 @@ import com.example.demo.modelo.EstadoReclamo;
 import com.example.demo.modelo.Reclamo;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 // Reclamo con su estado actual y si esta publicado. Lo usan el listado del panel
 // y Mis Reportes (GET /api/reclamos/me). Tiene los mismos campos que
@@ -23,10 +24,12 @@ public record ReclamoResumenResponse(
         String usuarioNombre,
         String estadoActual,
         OffsetDateTime fechaEstadoActual,
-        boolean publicado
+        boolean publicado,
+        List<String> fotos
 ) {
     // estadoActual puede ser null en un reclamo viejo sin historial.
-    public static ReclamoResumenResponse de(Reclamo r, EstadoReclamo estadoActual, boolean publicado) {
+    public static ReclamoResumenResponse de(Reclamo r, EstadoReclamo estadoActual, boolean publicado,
+                                          List<String> fotos) {
         return new ReclamoResumenResponse(
                 r.getId(), r.getTitulo(), r.getDescripcion(), r.getFotoUrl(), r.getUbicacion(),
                 r.getFechaCreacion(),
@@ -35,7 +38,7 @@ public record ReclamoResumenResponse(
                 r.getUsuario().getId(), r.getUsuario().getNombre(),
                 estadoActual != null ? estadoActual.getEstado() : null,
                 estadoActual != null ? estadoActual.getFecha() : null,
-                publicado
+                publicado, fotos
         );
     }
 }

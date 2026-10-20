@@ -15,11 +15,14 @@ import com.example.demo.repositorio.ReclamoRepository;
 import com.example.demo.repositorio.UsuarioRepository;
 import com.example.demo.repositorio.ZonaRepository;
 import com.example.demo.service.ReclamoConsultaService;
+import com.example.demo.service.ReclamoFotoService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -34,17 +37,20 @@ public class ReclamoController {
     private final UsuarioRepository usuarioRepository;
     private final EstadoReclamoRepository estadoReclamoRepository;
     private final ReclamoConsultaService reclamoConsultaService;
+    private final ReclamoFotoService reclamoFotoService;
 
     public ReclamoController(ReclamoRepository reclamoRepository, ZonaRepository zonaRepository,
                               CategoriaRepository categoriaRepository, UsuarioRepository usuarioRepository,
                               EstadoReclamoRepository estadoReclamoRepository,
-                              ReclamoConsultaService reclamoConsultaService) {
+                              ReclamoConsultaService reclamoConsultaService,
+                              ReclamoFotoService reclamoFotoService) {
         this.reclamoRepository = reclamoRepository;
         this.zonaRepository = zonaRepository;
         this.categoriaRepository = categoriaRepository;
         this.usuarioRepository = usuarioRepository;
         this.estadoReclamoRepository = estadoReclamoRepository;
         this.reclamoConsultaService = reclamoConsultaService;
+        this.reclamoFotoService = reclamoFotoService;
     }
 
     @GetMapping
@@ -117,6 +123,17 @@ public class ReclamoController {
         estadoReclamoRepository.save(new EstadoReclamo(guardado, "recibido", null));
 
         return ResponseEntity.status(HttpStatus.CREATED).body(ReclamoResponse.de(guardado));
+    }
+
+    // Sube fotos (jpg/png/webp, hasta 5 MB c/u) a un reclamo propio. Va aparte de la
+    // creacion para no cambiar el POST JSON que ya usa el front. Devuelve las URLs de
+    // todas las fotos del reclamo.
+    @PostMapping(value = "/{id}/fotos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<List<String>> subirFotos(@PathVariable Long id,
+                                                   @RequestParam("fotos") List<MultipartFile> fotos,
+                                                   Authentication authentication) {
+        List<String> urls = reclamoFotoService.subir(id, authentication.getName(), fotos);
+        return ResponseEntity.status(HttpStatus.CREATED).body(urls);
     }
 
     private Reclamo buscarOFallar(Long id) {

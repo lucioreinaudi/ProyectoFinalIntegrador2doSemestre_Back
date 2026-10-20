@@ -28,7 +28,8 @@ public record ReclamoDetalleResponse(
         boolean publicado,
         Vecino vecino,
         List<EstadoReclamoResponse> historial,
-        List<AlertaVinculada> alertas
+        List<AlertaVinculada> alertas,
+        List<String> fotos
 ) {
     public record Vecino(Long id, String nombre, String apellido, String email, String telefono) {
     }
@@ -47,7 +48,7 @@ public record ReclamoDetalleResponse(
             "Lat:\\s*(-?\\d+(?:\\.\\d+)?)\\s*,\\s*Lng:\\s*(-?\\d+(?:\\.\\d+)?)");
 
     public static ReclamoDetalleResponse de(Reclamo r, List<EstadoReclamoResponse> historial,
-                                            List<AlertaVinculada> alertas) {
+                                            List<AlertaVinculada> alertas, List<String> fotos) {
         Double lat = null;
         Double lng = null;
         if (r.getUbicacion() != null) {
@@ -69,7 +70,7 @@ public record ReclamoDetalleResponse(
                 r.getFechaCreacion(),
                 r.getZona().getId(), r.getZona().getNombre(),
                 r.getCategoria().getId(), r.getCategoria().getNombre(),
-                estadoActual, !alertas.isEmpty(), vecino, historial, alertas
+                estadoActual, !alertas.isEmpty(), vecino, historial, alertas, fotos
         );
     }
 }

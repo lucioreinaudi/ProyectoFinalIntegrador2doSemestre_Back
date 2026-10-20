@@ -6,6 +6,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.stream.Collectors;
 
@@ -24,6 +25,14 @@ public class GlobalExceptionHandler {
 
         ProblemDetail problema = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
         problema.setDetail(detalle);
+        return problema;
+    }
+
+    // Lo corta Spring antes de llegar al controlador, por eso necesita su propio manejo.
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ProblemDetail manejarArchivoGrande(MaxUploadSizeExceededException ex) {
+        ProblemDetail problema = ProblemDetail.forStatus(HttpStatus.PAYLOAD_TOO_LARGE);
+        problema.setDetail("Cada imagen puede pesar hasta 5 MB");
         return problema;
     }
 }

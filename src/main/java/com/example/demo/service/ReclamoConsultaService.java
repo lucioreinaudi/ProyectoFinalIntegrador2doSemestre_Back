@@ -7,8 +7,10 @@ import com.example.demo.dto.ReclamoResumenResponse;
 import com.example.demo.modelo.AlertaReclamo;
 import com.example.demo.modelo.EstadoReclamo;
 import com.example.demo.modelo.Reclamo;
+import com.example.demo.modelo.ReclamoFoto;
 import com.example.demo.repositorio.AlertaReclamoRepository;
 import com.example.demo.repositorio.EstadoReclamoRepository;
+import com.example.demo.repositorio.ReclamoFotoRepository;
 import com.example.demo.repositorio.ReclamoRepository;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
@@ -24,6 +26,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,12 +46,15 @@ public class ReclamoConsultaService {
     private final ReclamoRepository reclamoRepository;
     private final EstadoReclamoRepository estadoReclamoRepository;
     private final AlertaReclamoRepository alertaReclamoRepository;
+    private final ReclamoFotoRepository reclamoFotoRepository;
 
     public ReclamoConsultaService(ReclamoRepository reclamoRepository, EstadoReclamoRepository estadoReclamoRepository,
-                                  AlertaReclamoRepository alertaReclamoRepository) {
+                                  AlertaReclamoRepository alertaReclamoRepository,
+                                  ReclamoFotoRepository reclamoFotoRepository) {
         this.reclamoRepository = reclamoRepository;
         this.estadoReclamoRepository = estadoReclamoRepository;
         this.alertaReclamoRepository = alertaReclamoRepository;
+        this.reclamoFotoRepository = reclamoFotoRepository;
     }
 
     // Filtros del listado del panel. Todos opcionales (null = no filtrar).
@@ -91,7 +97,10 @@ public class ReclamoConsultaService {
                 .findByReclamoIdOrderByFechaVinculacionAsc(reclamoId)
                 .stream().map(ReclamoDetalleResponse.AlertaVinculada::de).toList();
 
-        return ReclamoDetalleResponse.de(reclamo, historial, alertas);
+        List<String> fotos = reclamoFotoRepository.findByReclamoIdOrderByOrdenAscIdAsc(reclamoId)
+                .stream().map(ReclamoFoto::getUrl).toList();
+
+        return ReclamoDetalleResponse.de(reclamo, historial, alertas, fotos);
     }
 
     // Agrega estado actual y "publicado" a una lista de reclamos con 2 consultas en total.
@@ -107,9 +116,14 @@ public class ReclamoConsultaService {
             estadoActual.putIfAbsent(e.getReclamo().getId(), e);
         }
         Set<Long> publicados = alertaReclamoRepository.findReclamoIdsPublicados(ids);
+        Map<Long, List<String>> fotos = new HashMap<>();
+        for (ReclamoFoto f : reclamoFotoRepository.findByReclamoIdInOrderByOrdenAscIdAsc(ids)) {
+            fotos.computeIfAbsent(f.getReclamo().getId(), k -> new ArrayList<>()).add(f.getUrl());
+        }
 
         return reclamos.stream()
-                .map(r -> ReclamoResumenResponse.de(r, estadoActual.get(r.getId()), publicados.contains(r.getId())))
+                .map(r -> ReclamoResumenResponse.de(r, estadoActual.get(r.getId()), publicados.contains(r.getId()),
+                        fotos.getOrDefault(r.getId(), List.of())))
                 .toList();
     }
 
