@@ -7,6 +7,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.stream.Collectors;
 
@@ -25,6 +27,24 @@ public class GlobalExceptionHandler {
 
         ProblemDetail problema = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
         problema.setDetail(detalle);
+        return problema;
+    }
+
+    // Sin esto, el ResponseStatusException se resuelve con sendError y el despacho a /error
+    // lo bloquea Spring Security: el cliente recibia un 403 vacio en lugar del codigo real.
+    @ExceptionHandler(ResponseStatusException.class)
+    public ProblemDetail manejarEstado(ResponseStatusException ex) {
+        ProblemDetail problema = ProblemDetail.forStatus(ex.getStatusCode());
+        problema.setDetail(ex.getReason());
+        return problema;
+    }
+
+    // Pedido multipart sin el campo esperado (ej. falta "fotos"): Spring lo corta antes del
+    // controlador y, sin handler, terminaba igual en el 403 vacio.
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ProblemDetail manejarParteFaltante(MissingServletRequestPartException ex) {
+        ProblemDetail problema = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problema.setDetail("Falta el campo '" + ex.getRequestPartName() + "'");
         return problema;
     }
 
