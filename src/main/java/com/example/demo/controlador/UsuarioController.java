@@ -4,6 +4,7 @@ import com.example.demo.dto.CambiarPasswordRequest;
 import com.example.demo.dto.UsuarioActualizarRequest;
 import com.example.demo.dto.UsuarioCrearRequest;
 import com.example.demo.dto.UsuarioResponse;
+import com.example.demo.modelo.Rol;
 import com.example.demo.modelo.Usuario;
 import com.example.demo.modelo.Zona;
 import com.example.demo.repositorio.UsuarioRepository;
@@ -79,6 +80,12 @@ public class UsuarioController {
     public UsuarioResponse actualizarPerfil(@Valid @RequestBody UsuarioActualizarRequest request, Authentication authentication) {
         Usuario usuario = usuarioRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado"));
+
+        // El municipio no tiene perfil que editar (zona, documento, etc. no aplican):
+        // la unica edicion de esa cuenta es la contraseña (PUT /me/password).
+        if (usuario.getRol() == Rol.municipio) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "El municipio no puede editar su perfil");
+        }
 
         usuario.setNombre(request.nombre());
         usuario.setApellido(request.apellido());

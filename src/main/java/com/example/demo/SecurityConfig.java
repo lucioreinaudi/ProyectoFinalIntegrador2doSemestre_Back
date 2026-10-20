@@ -17,9 +17,20 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 // Configuracion de Spring Security.
-// Publicos: login y registro (no se puede pedir un token para conseguir un token,
-// ni estar logueado para poder registrarse). Todo lo demas exige un JWT valido,
-// que valida JwtAuthenticationFilter en cada pedido.
+// Publicos: login, registro y el clima (no se puede pedir un token para conseguir
+// un token, ni estar logueado para poder registrarse; el clima es informacion
+// publica). Todo lo demas exige un JWT valido, que valida JwtAuthenticationFilter
+// en cada pedido.
+//
+// Restricciones por rol: solo cubren lo que se puede decidir mirando el metodo y
+// el path (ver el detalle de cada bloque mas abajo). Las reglas que dependen de
+// datos (por ejemplo "un vecino no puede crear un reclamo", o "no puede ver el
+// historial de un reclamo ajeno") estan adentro de los controladores
+// correspondientes, porque SecurityConfig no puede saber de quien es cada fila.
+//
+// El orden de las reglas importa: Spring Security usa la PRIMERA que matchea.
+// Por eso /api/reclamos/me va antes que /api/reclamos/*, si no esta ultima
+// (que es para el detalle por id, solo municipio) la tapa.
 //
 // El CORS se configura ACA, no en un WebMvcConfigurer aparte (asi estaba antes,
 // en CorsConfig.java, que por eso se borro). Spring Security intercepta los
@@ -63,6 +74,31 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/usuarios").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/clima/**").permitAll()
+
+                        // "Lo mio" del vecino: va antes que las reglas de abajo, para que no lo tapen.
+                        .requestMatchers(HttpMethod.GET, "/api/reclamos/me").authenticated()
+
+                        // Reclamos ajenos: solo municipio. Cubre el listado completo, por usuario,
+                        // por zona, por categoria, y el detalle por id.
+                        .requestMatchers(HttpMethod.GET, "/api/reclamos").hasRole("MUNICIPIO")
+                        .requestMatchers(HttpMethod.GET, "/api/reclamos/usuario/**").hasRole("MUNICIPIO")
+                        .requestMatchers(HttpMethod.GET, "/api/reclamos/zona/**").hasRole("MUNICIPIO")
+                        .requestMatchers(HttpMethod.GET, "/api/reclamos/categoria/**").hasRole("MUNICIPIO")
+                        .requestMatchers(HttpMethod.GET, "/api/reclamos/*").hasRole("MUNICIPIO")
+
+                        // Listado de usuarios y notificaciones ajenas: solo municipio.
+                        .requestMatchers(HttpMethod.GET, "/api/usuarios").hasRole("MUNICIPIO")
+                        .requestMatchers(HttpMethod.GET, "/api/notificaciones/usuario/**").hasRole("MUNICIPIO")
+
+                        // Crear/cambiar alertas, vinculos, estados de reclamo, zonas y categorias: solo municipio.
+                        .requestMatchers(HttpMethod.POST, "/api/alertas").hasRole("MUNICIPIO")
+                        .requestMatchers(HttpMethod.PATCH, "/api/alertas/*/estado").hasRole("MUNICIPIO")
+                        .requestMatchers(HttpMethod.POST, "/api/alertas-reclamos").hasRole("MUNICIPIO")
+                        .requestMatchers(HttpMethod.DELETE, "/api/alertas-reclamos/**").hasRole("MUNICIPIO")
+                        .requestMatchers(HttpMethod.POST, "/api/estados-reclamo").hasRole("MUNICIPIO")
+                        .requestMatchers(HttpMethod.POST, "/api/zonas").hasRole("MUNICIPIO")
+                        .requestMatchers(HttpMethod.POST, "/api/categorias").hasRole("MUNICIPIO")
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

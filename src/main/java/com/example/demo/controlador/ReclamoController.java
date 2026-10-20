@@ -5,6 +5,7 @@ import com.example.demo.dto.ReclamoResponse;
 import com.example.demo.modelo.Categoria;
 import com.example.demo.modelo.EstadoReclamo;
 import com.example.demo.modelo.Reclamo;
+import com.example.demo.modelo.Rol;
 import com.example.demo.modelo.Usuario;
 import com.example.demo.modelo.Zona;
 import com.example.demo.repositorio.CategoriaRepository;
@@ -82,6 +83,11 @@ public class ReclamoController {
         // de la autenticacion), nunca un id que mande el cliente en el body.
         Usuario usuario = usuarioRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado"));
+
+        // El municipio no reporta problemas, solo los gestiona.
+        if (usuario.getRol() == Rol.municipio) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "El municipio no puede crear reclamos");
+        }
 
         Zona zona = zonaRepository.findById(request.zonaId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "No existe la zona indicada"));
