@@ -99,6 +99,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/zonas").hasRole("MUNICIPIO")
                         .requestMatchers(HttpMethod.POST, "/api/categorias").hasRole("MUNICIPIO")
 
+                        // Todo el panel de administracion (cualquier metodo): solo municipio.
+                        .requestMatchers("/api/admin/**").hasRole("MUNICIPIO")
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

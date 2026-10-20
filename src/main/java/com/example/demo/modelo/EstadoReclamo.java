@@ -18,7 +18,7 @@ public class EstadoReclamo {
     @JoinColumn(name = "reclamo_id", nullable = false)
     private Reclamo reclamo;
 
-    // Valores que acepta el CHECK de la BD: 'recibido', 'en revision', 'en proceso', 'resuelto'.
+    // Valores que acepta el CHECK de la BD: 'recibido', 'en revision', 'en proceso', 'resuelto', 'rechazado'.
     // Es String (y no enum) porque "en revision" y "en proceso" tienen espacios. Default igual al de la BD.
     @Column(nullable = false, length = 20)
     private String estado = "recibido";

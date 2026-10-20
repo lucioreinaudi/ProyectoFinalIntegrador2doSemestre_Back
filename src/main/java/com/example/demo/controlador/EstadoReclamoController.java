@@ -9,6 +9,7 @@ import com.example.demo.modelo.Usuario;
 import com.example.demo.repositorio.EstadoReclamoRepository;
 import com.example.demo.repositorio.ReclamoRepository;
 import com.example.demo.repositorio.UsuarioRepository;
+import com.example.demo.service.ReclamoEstadoService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,24 +18,22 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/api/estados-reclamo")
 public class EstadoReclamoController {
 
-    // Mismos valores que el CHECK de la tabla EstadoReclamo en la BD.
-    private static final Set<String> ESTADOS_VALIDOS = Set.of("recibido", "en revision", "en proceso", "resuelto", "rechazado");
-
     private final EstadoReclamoRepository estadoReclamoRepository;
     private final ReclamoRepository reclamoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final ReclamoEstadoService reclamoEstadoService;
 
     public EstadoReclamoController(EstadoReclamoRepository estadoReclamoRepository, ReclamoRepository reclamoRepository,
-                                    UsuarioRepository usuarioRepository) {
+                                    UsuarioRepository usuarioRepository, ReclamoEstadoService reclamoEstadoService) {
         this.estadoReclamoRepository = estadoReclamoRepository;
         this.reclamoRepository = reclamoRepository;
         this.usuarioRepository = usuarioRepository;
+        this.reclamoEstadoService = reclamoEstadoService;
     }
 
     // Un vecino solo puede ver el historial de SUS PROPIOS reclamos (lo necesita
@@ -56,19 +55,13 @@ public class EstadoReclamoController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ese reclamo no tiene estados cargados"));
     }
 
+    // Cambio de estado hecho por el municipio (SecurityConfig ya lo restringe).
+    // Las reglas (transiciones, comentario obligatorio) y la notificacion al
+    // vecino estan en ReclamoEstadoService.
     @PostMapping
     public ResponseEntity<EstadoReclamoResponse> crear(@Valid @RequestBody EstadoReclamoCrearRequest request) {
-        Reclamo reclamo = reclamoRepository.findById(request.reclamoId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "No existe el reclamo indicado"));
-
-        String estado = request.estado() == null ? "recibido" : request.estado();
-        if (!ESTADOS_VALIDOS.contains(estado)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Estado invalido. Valores permitidos: " + ESTADOS_VALIDOS);
-        }
-
-        EstadoReclamo nuevoEstado = new EstadoReclamo(reclamo, estado, request.comentario());
-        EstadoReclamo guardado = estadoReclamoRepository.save(nuevoEstado);
+        EstadoReclamo guardado = reclamoEstadoService.cambiarEstado(
+                request.reclamoId(), request.estado(), request.comentario());
         return ResponseEntity.status(HttpStatus.CREATED).body(EstadoReclamoResponse.de(guardado));
     }
 
