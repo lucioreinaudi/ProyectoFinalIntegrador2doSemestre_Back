@@ -24,7 +24,7 @@ import java.util.Set;
 public class EstadoReclamoController {
 
     // Mismos valores que el CHECK de la tabla EstadoReclamo en la BD.
-    private static final Set<String> ESTADOS_VALIDOS = Set.of("recibido", "en revision", "en proceso", "resuelto");
+    private static final Set<String> ESTADOS_VALIDOS = Set.of("recibido", "en revision", "en proceso", "resuelto", "rechazado");
 
     private final EstadoReclamoRepository estadoReclamoRepository;
     private final ReclamoRepository reclamoRepository;

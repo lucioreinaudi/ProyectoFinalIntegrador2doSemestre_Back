@@ -14,6 +14,11 @@ public class Categoria {
     @Column(nullable = false, unique = true, length = 100)
     private String nombre;
 
+    // Baja logica: las categorias no se borran (tienen reclamos vinculados),
+    // se desactivan. Default igual al de la BD (true).
+    @Column(nullable = false)
+    private boolean activa = true;
+
     public Categoria() {
     }
 
@@ -35,5 +40,13 @@ public class Categoria {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+
+    public boolean isActiva() {
+        return activa;
+    }
+
+    public void setActiva(boolean activa) {
+        this.activa = activa;
     }
 }

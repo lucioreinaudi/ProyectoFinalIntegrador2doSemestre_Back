@@ -17,6 +17,11 @@ public class Zona {
     @Column(columnDefinition = "text")
     private String descripcion;
 
+    // Baja logica: las zonas no se borran (tienen reclamos/usuarios/alertas
+    // vinculados), se desactivan. Default igual al de la BD (true).
+    @Column(nullable = false)
+    private boolean activa = true;
+
     public Zona() {
     }
 
@@ -47,5 +52,13 @@ public class Zona {
 
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
+    }
+
+    public boolean isActiva() {
+        return activa;
+    }
+
+    public void setActiva(boolean activa) {
+        this.activa = activa;
     }
 }

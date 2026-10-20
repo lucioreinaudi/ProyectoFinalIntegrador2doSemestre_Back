@@ -1,8 +1,10 @@
 package com.example.demo.modelo;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "\"Usuario\"")
@@ -45,6 +47,11 @@ public class Usuario {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "zona_id")
     private Zona zona;
+
+    // En la BD tiene default now(); aca lo completa Hibernate al insertar.
+    @CreationTimestamp
+    @Column(name = "fecha_registro", nullable = false, updatable = false)
+    private OffsetDateTime fechaRegistro;
 
     public Usuario() {
     }
@@ -142,5 +149,13 @@ public class Usuario {
 
     public void setZona(Zona zona) {
         this.zona = zona;
+    }
+
+    public OffsetDateTime getFechaRegistro() {
+        return fechaRegistro;
+    }
+
+    public void setFechaRegistro(OffsetDateTime fechaRegistro) {
+        this.fechaRegistro = fechaRegistro;
     }
 }
