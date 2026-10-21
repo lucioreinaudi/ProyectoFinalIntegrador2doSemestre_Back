@@ -1,6 +1,6 @@
 package com.example.demo.controlador;
 
-import com.example.demo.service.AlertaService;
+import com.example.demo.service.ImagenSubidaService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -9,23 +9,31 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
-// Endpoints del panel sobre alertas que no son el ABM (ese esta en AlertaController).
-// Todo /api/admin/** es solo para el municipio (regla en SecurityConfig).
+// Subida de imagenes desde el panel (el ABM de alertas esta en AlertaController y
+// el de tipos en TipoAlertaController). Cada endpoint guarda en su propia carpeta
+// del bucket. Todo /api/admin/** es solo para el municipio (SecurityConfig).
 @RestController
-@RequestMapping("/api/admin/alertas")
+@RequestMapping("/api/admin")
 public class AdminAlertaController {
 
-    private final AlertaService alertaService;
+    private final ImagenSubidaService imagenSubidaService;
 
-    public AdminAlertaController(AlertaService alertaService) {
-        this.alertaService = alertaService;
+    public AdminAlertaController(ImagenSubidaService imagenSubidaService) {
+        this.imagenSubidaService = imagenSubidaService;
     }
 
-    // Sube una imagen para una alerta (campo multipart "imagen", jpg/png/webp, hasta 5 MB)
-    // y devuelve { "url": ... }. Despues esa URL se manda en imagenUrl al crear,
-    // editar o publicar la alerta.
-    @PostMapping(value = "/imagen", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Map<String, String>> subirImagen(@RequestParam("imagen") MultipartFile imagen) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("url", alertaService.subirImagen(imagen)));
+    // Imagen propia de una alerta (campo multipart "imagen", jpg/png/webp, hasta 5 MB).
+    // Devuelve { "url": ... }, que despues se manda en imagenUrl al crear, editar o publicar.
+    @PostMapping(value = "/alertas/imagen", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, String>> subirImagenAlerta(@RequestParam("imagen") MultipartFile imagen) {
+        String url = imagenSubidaService.subir(imagen, ImagenSubidaService.CARPETA_ALERTAS);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("url", url));
+    }
+
+    // Imagen de referencia de un tipo de alerta. Mismo formato; va en tipos-alerta/.
+    @PostMapping(value = "/tipos-alerta/imagen", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, String>> subirImagenTipo(@RequestParam("imagen") MultipartFile imagen) {
+        String url = imagenSubidaService.subir(imagen, ImagenSubidaService.CARPETA_TIPOS_ALERTA);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("url", url));
     }
 }

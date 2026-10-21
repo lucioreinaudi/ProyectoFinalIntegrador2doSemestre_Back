@@ -11,11 +11,7 @@ import com.example.demo.repositorio.ZonaRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.io.IOException;
-import java.util.UUID;
 
 import java.util.HashMap;
 import java.util.List;
@@ -47,28 +43,6 @@ public class AlertaService {
         this.zonaRepository = zonaRepository;
         this.storageService = storageService;
         this.tipoAlertaService = tipoAlertaService;
-    }
-
-    // Sube una imagen elegida por el municipio desde su computadora y devuelve la URL.
-    // Va en la carpeta alertas/ del mismo bucket que las fotos de reclamos. Se sube
-    // antes de guardar la alerta (el formulario manda despues esa URL en imagenUrl);
-    // si el municipio cancela, el archivo queda sin usar en Storage (aceptado).
-    public String subirImagen(MultipartFile archivo) {
-        if (archivo == null || archivo.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se envio ninguna imagen");
-        }
-        if (archivo.getSize() > FormatoImagen.TAMANIO_MAXIMO_BYTES) {
-            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "Cada imagen puede pesar hasta 5 MB");
-        }
-        byte[] bytes;
-        try {
-            bytes = archivo.getBytes();
-        } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se pudo leer la imagen enviada", e);
-        }
-        FormatoImagen formato = FormatoImagen.detectar(bytes);
-        String ruta = "alertas/" + UUID.randomUUID() + "." + formato.extension();
-        return storageService.subir(ruta, bytes, formato.contentType());
     }
 
     @Transactional
@@ -135,7 +109,7 @@ public class AlertaService {
         return alertas.stream().map(a -> AlertaResponse.de(a, cantidades.getOrDefault(a.getId(), 0L))).toList();
     }
 
-    // La imagen tiene que ser de nuestro Storage: una subida con subirImagen o una
+    // La imagen tiene que ser de nuestro Storage: una subida desde el panel o una
     // foto de un reclamo. Si al editar se deja la que ya tenia, se acepta igual.
     private String validarImagen(Alerta alerta, String imagenUrl) {
         if (imagenUrl == null || imagenUrl.isBlank()) {
