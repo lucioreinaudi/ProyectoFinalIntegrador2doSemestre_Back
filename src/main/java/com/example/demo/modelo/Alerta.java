@@ -35,7 +35,7 @@ public class Alerta {
     @Column(nullable = false, length = 20)
     private String estado = "activa";
 
-    // Valores que acepta el CHECK de la BD: tormenta, viento, electricidad, arbol, otro. Default igual al de la BD.
+    // Clave de un TipoAlerta (clave foranea en la BD, script SCRUM-94). Default igual al de la BD.
     @Column(nullable = false, length = 30)
     private String tipo = "otro";
 

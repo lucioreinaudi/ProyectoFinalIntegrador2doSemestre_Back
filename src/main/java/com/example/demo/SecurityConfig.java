@@ -84,6 +84,8 @@ public class SecurityConfig {
                         // login y formularios). Las dadas de baja solo las ve el panel.
                         .requestMatchers(HttpMethod.GET, "/api/zonas", "/api/zonas/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categorias", "/api/categorias/*").permitAll()
+                        // Tipos de alerta: el Home los usa para el icono y la imagen de referencia.
+                        .requestMatchers(HttpMethod.GET, "/api/tipos-alerta", "/api/tipos-alerta/*").permitAll()
 
                         // "Lo mio" del vecino: va antes que las reglas de abajo, para que no lo tapen.
                         .requestMatchers(HttpMethod.GET, "/api/reclamos/me").authenticated()
@@ -112,6 +114,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/categorias").hasRole("MUNICIPIO")
                         .requestMatchers(HttpMethod.PUT, "/api/zonas/*", "/api/categorias/*").hasRole("MUNICIPIO")
                         .requestMatchers(HttpMethod.PATCH, "/api/zonas/*/activa", "/api/categorias/*/activa").hasRole("MUNICIPIO")
+                        .requestMatchers(HttpMethod.POST, "/api/tipos-alerta").hasRole("MUNICIPIO")
+                        .requestMatchers(HttpMethod.PUT, "/api/tipos-alerta/*").hasRole("MUNICIPIO")
+                        .requestMatchers(HttpMethod.PATCH, "/api/tipos-alerta/*/activa").hasRole("MUNICIPIO")
 
                         // Todo el panel de administracion (cualquier metodo): solo municipio.
                         .requestMatchers("/api/admin/**").hasRole("MUNICIPIO")

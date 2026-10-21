@@ -30,20 +30,23 @@ public class AlertaService {
 
     // Mismos valores que los CHECK de la tabla Alerta en la BD.
     public static final Set<String> NIVELES = Set.of("alto", "medio", "bajo");
-    public static final Set<String> TIPOS = Set.of("tormenta", "viento", "electricidad", "arbol", "otro");
+    // Los tipos ya no son una lista fija: viven en la tabla TipoAlerta (SCRUM-94).
     public static final Set<String> ESTADOS = Set.of("activa", "finalizada");
 
     private final AlertaRepository alertaRepository;
     private final AlertaReclamoRepository alertaReclamoRepository;
     private final ZonaRepository zonaRepository;
     private final StorageService storageService;
+    private final TipoAlertaService tipoAlertaService;
 
     public AlertaService(AlertaRepository alertaRepository, AlertaReclamoRepository alertaReclamoRepository,
-                         ZonaRepository zonaRepository, StorageService storageService) {
+                         ZonaRepository zonaRepository, StorageService storageService,
+                         TipoAlertaService tipoAlertaService) {
         this.alertaRepository = alertaRepository;
         this.alertaReclamoRepository = alertaReclamoRepository;
         this.zonaRepository = zonaRepository;
         this.storageService = storageService;
+        this.tipoAlertaService = tipoAlertaService;
     }
 
     // Sube una imagen elegida por el municipio desde su computadora y devuelve la URL.
@@ -153,9 +156,9 @@ public class AlertaService {
         }
 
         String tipo = (datos.tipo() == null || datos.tipo().isBlank()) ? "otro" : datos.tipo();
-        if (!TIPOS.contains(tipo)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo invalido. Valores permitidos: " + TIPOS);
-        }
+        // alerta.getTipo() es el que ya tenia (null si es nueva; el default "otro"
+        // de la entidad no cuenta porque todavia no se guardo).
+        tipoAlertaService.validarParaAlerta(tipo, alerta.getId() != null ? alerta.getTipo() : null);
 
         Zona zona = zonaRepository.findById(datos.zonaId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "No existe la zona indicada"));
