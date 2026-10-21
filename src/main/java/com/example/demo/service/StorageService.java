@@ -45,6 +45,13 @@ public class StorageService {
         return baseUrl + "/storage/v1/object/public/" + bucket + "/" + ruta;
     }
 
+    // True si la URL es una imagen publica de nuestro bucket (subida por el sistema).
+    // Sirve para no aceptar como imagen de una alerta cualquier direccion de internet.
+    public boolean esUrlPropia(String url) {
+        return url != null && !baseUrl.isBlank()
+                && url.startsWith(baseUrl + "/storage/v1/object/public/" + bucket + "/");
+    }
+
     // Best effort: se usa para deshacer una subida cuando algo falla despues.
     public void borrar(String ruta) {
         try {

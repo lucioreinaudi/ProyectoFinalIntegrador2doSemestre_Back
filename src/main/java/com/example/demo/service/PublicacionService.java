@@ -71,15 +71,8 @@ public class PublicacionService {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "El reclamo ya esta vinculado a esa alerta");
             }
         } else {
-            AlertaCrearRequest datos = request.alerta();
-            // La foto del vecino pasa a la alerta solo si el admin lo decide (Q26).
-            boolean usarFotoDelReclamo = request.incluirFoto() && reclamo.getFotoUrl() != null
-                    && (datos.imagenUrl() == null || datos.imagenUrl().isBlank());
-            if (usarFotoDelReclamo) {
-                datos = new AlertaCrearRequest(datos.titulo(), datos.descripcion(), datos.nivelGravedad(),
-                        datos.recomendaciones(), datos.tipo(), reclamo.getFotoUrl(), datos.zonaId());
-            }
-            alerta = alertaService.crear(datos, autor);
+            // La imagen ya viene elegida en imagenUrl (Q26); AlertaService la valida.
+            alerta = alertaService.crear(request.alerta(), autor);
         }
 
         alertaReclamoRepository.save(new AlertaReclamo(alerta, reclamo));

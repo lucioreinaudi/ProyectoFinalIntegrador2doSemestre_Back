@@ -16,19 +16,9 @@ import java.util.List;
 import java.util.UUID;
 
 // Subida de fotos de un reclamo. El tipo se decide por el contenido real del
-// archivo (primeros bytes), no por el nombre ni por el Content-Type que mande el
-// cliente, y el nombre en Storage lo genera el servidor.
+// archivo (FormatoImagen), y el nombre en Storage lo genera el servidor.
 @Service
 public class ReclamoFotoService {
-
-    public static final long TAMANIO_MAXIMO_BYTES = 5L * 1024 * 1024;
-
-    private record Formato(String extension, String contentType) {
-    }
-
-    private static final Formato JPG = new Formato("jpg", "image/jpeg");
-    private static final Formato PNG = new Formato("png", "image/png");
-    private static final Formato WEBP = new Formato("webp", "image/webp");
 
     private final ReclamoRepository reclamoRepository;
     private final ReclamoFotoRepository reclamoFotoRepository;
@@ -65,9 +55,9 @@ public class ReclamoFotoService {
 
         // Se valida todo antes de subir algo, para no dejar subidas a medias por un archivo malo.
         List<byte[]> contenidos = new ArrayList<>();
-        List<Formato> formatos = new ArrayList<>();
+        List<FormatoImagen> formatos = new ArrayList<>();
         for (MultipartFile archivo : recibidos) {
-            if (archivo.getSize() > TAMANIO_MAXIMO_BYTES) {
+            if (archivo.getSize() > FormatoImagen.TAMANIO_MAXIMO_BYTES) {
                 throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "Cada imagen puede pesar hasta 5 MB");
             }
             byte[] bytes;
@@ -77,7 +67,7 @@ public class ReclamoFotoService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se pudo leer la imagen enviada", e);
             }
             contenidos.add(bytes);
-            formatos.add(detectarFormato(bytes));
+            formatos.add(FormatoImagen.detectar(bytes));
         }
 
         List<String> rutasSubidas = new ArrayList<>();
@@ -85,7 +75,7 @@ public class ReclamoFotoService {
         try {
             short orden = (short) existentes;
             for (int i = 0; i < contenidos.size(); i++) {
-                Formato formato = formatos.get(i);
+                FormatoImagen formato = formatos.get(i);
                 String ruta = reclamoId + "/" + UUID.randomUUID() + "." + formato.extension();
                 String url = storageService.subir(ruta, contenidos.get(i), formato.contentType());
                 rutasSubidas.add(ruta);
@@ -105,20 +95,5 @@ public class ReclamoFotoService {
 
         return reclamoFotoRepository.findByReclamoIdOrderByOrdenAscIdAsc(reclamoId).stream()
                 .map(ReclamoFoto::getUrl).toList();
-    }
-
-    private Formato detectarFormato(byte[] b) {
-        if (b.length >= 3 && (b[0] & 0xFF) == 0xFF && (b[1] & 0xFF) == 0xD8 && (b[2] & 0xFF) == 0xFF) {
-            return JPG;
-        }
-        if (b.length >= 8 && (b[0] & 0xFF) == 0x89 && b[1] == 'P' && b[2] == 'N' && b[3] == 'G'
-                && b[4] == 0x0D && b[5] == 0x0A && b[6] == 0x1A && b[7] == 0x0A) {
-            return PNG;
-        }
-        if (b.length >= 12 && b[0] == 'R' && b[1] == 'I' && b[2] == 'F' && b[3] == 'F'
-                && b[8] == 'W' && b[9] == 'E' && b[10] == 'B' && b[11] == 'P') {
-            return WEBP;
-        }
-        throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Formato no permitido: solo jpg, png o webp");
     }
 }
