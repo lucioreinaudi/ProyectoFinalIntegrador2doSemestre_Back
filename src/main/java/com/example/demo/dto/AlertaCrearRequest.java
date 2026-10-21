@@ -12,13 +12,17 @@ public record AlertaCrearRequest(
         @Size(max = 150, message = "El titulo puede tener hasta 150 caracteres")
         String titulo,
 
+        // Limite para que la alerta se lea bien (en el Home la descripcion se recorta
+        // igual; el texto completo se ve en el detalle).
         @NotBlank(message = "La descripcion es obligatoria")
+        @Size(max = 1000, message = "La descripcion puede tener hasta 1000 caracteres")
         String descripcion,
 
         // alto | medio | bajo (los valida AlertaService).
         @NotBlank(message = "El nivel de gravedad es obligatorio")
         String nivelGravedad,
 
+        @Size(max = 1000, message = "Las recomendaciones pueden tener hasta 1000 caracteres")
         String recomendaciones,
 
         // Opcional: si no viene, la alerta queda con tipo 'otro'.
