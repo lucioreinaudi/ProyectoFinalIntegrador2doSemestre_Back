@@ -106,6 +106,14 @@ public class ReclamoController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "No existe la zona indicada"));
         Categoria categoria = categoriaRepository.findById(request.categoriaId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "No existe la categoria indicada"));
+        // Las dadas de baja ya no aparecen en el formulario (Q16); esto cubre a quien
+        // llame a la API directo con un id viejo.
+        if (!zona.isActiva()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La zona indicada esta dada de baja");
+        }
+        if (!categoria.isActiva()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La categoria indicada esta dada de baja");
+        }
 
         Reclamo reclamo = new Reclamo();
         reclamo.setTitulo(request.titulo());

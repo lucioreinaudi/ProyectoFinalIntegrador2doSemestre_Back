@@ -80,6 +80,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/alertas/estado/activa").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/alertas/*").permitAll()
 
+                        // Zonas y categorias activas: publicas (filtro de zonas del Home sin
+                        // login y formularios). Las dadas de baja solo las ve el panel.
+                        .requestMatchers(HttpMethod.GET, "/api/zonas", "/api/zonas/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/categorias", "/api/categorias/*").permitAll()
+
                         // "Lo mio" del vecino: va antes que las reglas de abajo, para que no lo tapen.
                         .requestMatchers(HttpMethod.GET, "/api/reclamos/me").authenticated()
 
@@ -105,6 +110,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/estados-reclamo").hasRole("MUNICIPIO")
                         .requestMatchers(HttpMethod.POST, "/api/zonas").hasRole("MUNICIPIO")
                         .requestMatchers(HttpMethod.POST, "/api/categorias").hasRole("MUNICIPIO")
+                        .requestMatchers(HttpMethod.PUT, "/api/zonas/*", "/api/categorias/*").hasRole("MUNICIPIO")
+                        .requestMatchers(HttpMethod.PATCH, "/api/zonas/*/activa", "/api/categorias/*/activa").hasRole("MUNICIPIO")
 
                         // Todo el panel de administracion (cualquier metodo): solo municipio.
                         .requestMatchers("/api/admin/**").hasRole("MUNICIPIO")
