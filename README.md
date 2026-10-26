@@ -1,43 +1,58 @@
-# ProyectoFinalIntegrador2doSemestre_Back
-Repositorio oficial destinado al Trabajo Final Integrador de 2do Año (Solo Back)
+# Conectar Laboulaye - Backend API
 
-## Alta del usuario municipio
+Servicio de backend para Conectar Laboulaye, una plataforma municipal orientada a la gestión de reclamos urbanos y difusión de alertas para la ciudad de Laboulaye, Córdoba.
 
-Solo hay un usuario con rol `municipio` en todo el sistema (es el administrador).
-No se crea desde el registro público (`POST /api/usuarios` siempre crea usuarios
-`vecino`), se da de alta directo por SQL en Supabase.
+Este repositorio corresponde al Trabajo Final Integrador del 2° Semestre de la carrera de Desarrollo de Software.
 
-### 1. Generar el hash de la contraseña
+## Qué hace el sistema
+El backend provee una API REST encargada de:
+- Autenticación y gestión de usuarios con seguridad basada en roles (Vecino y Municipio).
+- Creación, seguimiento e historial de estados de reclamos vecinales.
+- Emisión, actualización y cierre de alertas municipales (cortes de calles, emergencias, avisos).
+- Administración de zonas urbanas y categorías de reclamos.
+- Envío y control de notificaciones dirigidas al vecino.
+- Generación de métricas generales de gestión para el panel administrativo.
 
-La contraseña no se guarda en texto plano, hay que hashearla con BCrypt antes de
-insertarla. Hay un script que lo hace, usando las mismas dependencias que ya tiene
-el proyecto (no hace falta instalar nada nuevo):
+## Tecnologías utilizadas
+- Java 17
+- Spring Boot 3
+- Spring Security & JWT (HS256)
+- Spring Data JPA / Hibernate
+- PostgreSQL (Base de datos en Supabase)
+- Maven
 
-```powershell
-.\scripts\generar-hash.ps1
-```
+## Variables de entorno
+Para ejecutar el proyecto localmente es necesario configurar las siguientes variables de entorno en el archivo src/main/resources/application.properties o como variables de ambiente del sistema:
 
-Te va a pedir la contraseña por consola (elegila vos, no se guarda en ningún
-archivo) y va a imprimir el hash. Copialo.
+SPRING_DATASOURCE_URL=jdbc:postgresql://<HOST>:<PUERTO>/<NOMBRE_BD>
+SPRING_DATASOURCE_USERNAME=<USUARIO_BD>
+SPRING_DATASOURCE_PASSWORD=<PASSWORD_BD>
+JWT_SECRET=<CLAVE_SECRETA_PARA_FIRMA_JWT>
 
-Requisito: haber corrido `mvnw.cmd compile` al menos una vez en este proyecto
-(para que las dependencias ya estén descargadas en tu `~/.m2` local), y tener un
-JDK con `javac` disponible (el JBR que trae IntelliJ sirve).
+## Cómo correr el proyecto en local
 
-### 2. Insertar el usuario en Supabase
+1. Clonar el repositorio:
+   git clone https://github.com/lucioreinaudi/ProyectoFinalIntegrador2doSemestre_Back.git
+   cd ProyectoFinalIntegrador2doSemestre_Back
 
-En el SQL Editor de Supabase:
+2. Configurar la base de datos PostgreSQL con las credenciales correspondientes.
 
-```sql
-INSERT INTO "Usuario" (email, nombre, password_hash, rol)
-VALUES ('municipio@laboulaye.gob.ar', 'Municipalidad de Laboulaye', '<PEGAR_EL_HASH_ACA>', 'municipio');
-```
+3. Ejecutar el proyecto mediante Maven:
+   ./mvnw spring-boot:run
 
-Ajustá el email y el nombre según corresponda. El campo `rol` tiene que ser
-exactamente `municipio` (en minúscula), es lo que exige el CHECK de la tabla.
+El servidor iniciará por defecto en el puerto 8080 (http://localhost:8080).
 
-### 3. Confirmar que funciona
+## Links de deploy y documentación de API
+- API Deployada (Render / Supabase): https://proyectofinalintegrador2dosemestre-back.onrender.com (o la URL de producción configurada)
 
-Logueate con `POST /api/auth/login` usando ese email y la contraseña (la de
-texto plano, no el hash). Si decodificás el token, el claim `rol` tiene que
-decir `"municipio"`.
+## Usuarios de prueba
+
+### Usuario Municipio (Administrador)
+- Email: municipio@laboulaye.gob.ar
+- Rol: municipio
+- Nota: La cuenta de municipio se genera de manera directa en la base de datos mediante script SQL.
+
+### Usuario Vecino
+- Email: vecino.demo@email.com
+- Rol: vecino
+- Nota: Se puede registrar cualquier usuario nuevo desde el formulario público del frontend.
