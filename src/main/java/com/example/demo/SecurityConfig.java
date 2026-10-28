@@ -83,6 +83,11 @@ public class SecurityConfig {
                 // para "autenticado pero sin el rol" (ej. un vecino en /api/admin/**).
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
+                        // /error es a donde Spring reenvia internamente un pedido rechazado para armar
+                        // la respuesta (ej. el 403 de un vecino en /api/admin/**). En ese reenvio el
+                        // filtro JWT no vuelve a correr: si /error exigiera login, el 403 terminaba
+                        // convertido en un 401 vacio. Es publica, pero solo muestra el error original.
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/usuarios").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/clima/**").permitAll()
