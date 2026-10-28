@@ -52,6 +52,41 @@ El servidor iniciará por defecto en el puerto 8080 (http://localhost:8080).
 - Rol: municipio
 - Nota: La cuenta de municipio se genera de manera directa en la base de datos mediante script SQL.
 
+## Pruebas automáticas
+
+Las pruebas usan **JUnit 5 + MockMvc + spring-security-test** y corren contra una base **H2 en memoria** (modo PostgreSQL), así que **no tocan Supabase** ni necesitan variables de entorno: la configuración está en `src/test/resources/application-test.properties` (perfil `test`).
+
+### Cómo correrlas
+
+Desde la carpeta del proyecto:
+
+```bash
+# Windows
+.\mvnw.cmd test
+
+# Linux / macOS
+./mvnw test
+```
+
+O desde IntelliJ: panel **Maven → demo → Lifecycle → test**, o clic derecho sobre `src/test/java` → **Run 'All Tests'**.
+
+> Si Maven no encuentra Java, configurá `JAVA_HOME` apuntando a un JDK 17 o superior (sirve el `jbr` que trae IntelliJ).
+
+Los resultados quedan en `target/surefire-reports/`.
+
+### Qué se prueba
+
+| Clase | Prueba | Resultado esperado |
+|---|---|---|
+| `SeguridadTest` | `loginCorrectoDevuelveToken` | `POST /api/auth/login` con credenciales válidas → **200** y un token JWT |
+| `SeguridadTest` | `loginConPasswordIncorrectaDa401` | Contraseña incorrecta → **401** |
+| `SeguridadTest` | `sinTokenDa401` | `GET /api/reclamos/me` sin token → **401** |
+| `SeguridadTest` | `vecinoEnZonaDeAdminDa403` | `GET /api/admin/usuarios` con token de vecino → **403** |
+| `SeguridadTest` | `municipioEnZonaDeAdminDa200` | `GET /api/admin/usuarios` con token de municipio → **200** |
+| `DemoApplicationTests` | `contextLoads` | El contexto de Spring levanta con el perfil `test` |
+
+Cada prueba crea sus propios datos (un usuario municipio y vecinos registrados por la API), la base se crea y se borra en cada corrida.
+
 ### Usuario Vecino
 - Email: vecino.demo@email.com
 - Rol: vecino
